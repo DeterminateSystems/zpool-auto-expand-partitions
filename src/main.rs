@@ -13,6 +13,12 @@ fn main() {
     let mut lzfs = libzfs::libzfs::Libzfs::new();
 
     let pool = lzfs.pool_by_name(&options.zpool_name).expect("Pool retreval failed");
+    match pool.vdev_tree() {
+        Ok(vdev) => vdev_process(vdev),
+        Err(e) => println!("Failed: {e}")
+    };
+}
 
-    dbg!(pool.vdev_tree());
+fn vdev_process(vdev: libzfs::vdev::VDev) {
+    
 }
