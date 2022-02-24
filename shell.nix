@@ -1,12 +1,15 @@
 let pkgs = import <nixpkgs> {}; in pkgs.stdenv.mkDerivation {
 	pname = "ztest";
 	version = "0.0.0";
-	buildInputs = [
-		pkgs.git pkgs.gitui
-		
-		pkgs.cargo pkgs.rustc pkgs.gcc pkgs.cargo-edit
+	buildInputs = builtins.attrValues {
+		inherit (pkgs)
+			git gitui
 
-		pkgs.pkg-config 
+			cargo rustc gcc cargo-edit
+
+			pkg-config;
+	} ++ [
 		pkgs.zfs.dev
+		pkgs.util-linux.dev
 	];
 }
