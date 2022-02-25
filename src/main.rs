@@ -41,7 +41,7 @@ fn vdev_disks(vdev: &libzfs::vdev::VDev, cache: &blkid::cache::Cache) {
             dbg!(&vdev);
             dbg!(path.file_name());
             dbg!({
-                let mut p: std::path::PathBuf = [ "/sys/class/block" ].iter().collect();
+                let mut p: std::path::PathBuf = "/sys/class/block".into();
                 p.push(path.file_name().unwrap());
                 p.push("partition");
                 std::fs::File::open(p)
