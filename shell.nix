@@ -20,9 +20,9 @@ let pkgs = import <nixpkgs> {}; inherit (pkgs) lib; in pkgs.stdenv.mkDerivation 
 	];
 	buildInputs = builtins.attrValues {
 		inherit (pkgs)
-			git gitui
+			git gitui cloud-utils
 
-			cargo rustc gcc cargo-edit
+			cargo rustc gcc gdb llvm cargo-edit
 
 			pkg-config;
 	} ++ [
