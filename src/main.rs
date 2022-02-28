@@ -76,8 +76,8 @@ mod tests {
             spares: vec![],
             cache: vec![],
         };
-
-        vdev_find_partitions(&vdev);
+        
+        vdev_list_partitions(&vdev);
     }
 
     #[test]
@@ -109,7 +109,7 @@ mod tests {
             cache: vec![],
         };
 
-        vdev_find_partitions(&vdev);
+        vdev_list_partitions(&vdev);
     }
 
     #[test]
@@ -147,6 +147,6 @@ mod tests {
             cache: vec![],
         };
 
-        vdev_find_partitions(&vdev);
+        vdev_list_partitions(&vdev);
     }
 }
