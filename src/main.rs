@@ -41,6 +41,15 @@ fn zfs_find_partitions_in_pool(pool_name: &str) {
 
 fn vdev_find_partitions(vdev: &libzfs::vdev::VDev) {
 
+fn lsblk_lookup_dev(path: &std::path::Path) -> LsblkJson {
+    let output = std::process::Command::new("lsblk")
+        .args(&[ "-o", "PKNAME,KNAME,PATH", "--json"])
+        .arg(path.as_os_str())
+        .output().expect("");
+
+    serde_json::from_str(&String::from_utf8(output.stdout).expect("")).expect("error handling requires thinking")
+}
+
 fn vdev_list_partitions<'a>(vdev: &'a libzfs::vdev::VDev) -> Vec<&'a PathBuf> {
     let mut vec = vec![];
     vdev_find_partitions(vdev, &mut vec);
