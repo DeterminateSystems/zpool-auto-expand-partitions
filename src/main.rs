@@ -37,6 +37,15 @@ struct LsblkInner {
     path: String,
 }
 
+#[derive(Debug)]
+struct DriveData {
+    path: PathBuf,
+    parent: String,
+    parent_path: PathBuf,
+    name: String,
+    partition: String,
+}
+
 fn zfs_find_partitions_in_pool(pool_name: &str) -> Result<Vec<DriveData>>  {
     let mut lzfs = libzfs::libzfs::Libzfs::new();
     
@@ -54,7 +63,15 @@ fn zfs_find_partitions_in_pool(pool_name: &str) -> Result<Vec<DriveData>>  {
                 let p_no = get_dev_partition_number(&first_dev.kname)?;
 
                 match &first_dev.pkname {
-                    Some(pkname) => println!("{pkname} {p_no}"),
+                    Some(pkname) => {
+                        acc.push(DriveData{
+                            partition: p_no,
+                            parent: pkname.to_owned(),
+                            parent_path: { ["/dev", pkname ].iter().collect() },
+                            path: disk_path.to_path_buf(),
+                            name: first_dev.kname.to_owned(),
+                        })
+                    },
                     _ => {},
                 }
             }
