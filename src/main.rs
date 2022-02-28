@@ -2,6 +2,8 @@
 use std::path::PathBuf;
 use clap::Parser;
 
+pub type Result<T, E = Box<dyn std::error::Error + Send + Sync + 'static>> = core::result::Result<T, E>;
+
 /// 
 #[derive(Debug, Parser)]
 #[clap(about, long_about = None)]
