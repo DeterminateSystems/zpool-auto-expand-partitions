@@ -1,8 +1,8 @@
 
-
 use std::path::PathBuf;
 use clap::Parser;
 
+/// 
 #[derive(Debug, Parser)]
 #[clap(about, long_about = None)]
 struct Options {
@@ -71,9 +71,9 @@ fn lsblk_lookup_dev(path: &std::path::Path) -> LsblkJson {
     let output = std::process::Command::new("lsblk")
         .args(&[ "-o", "PKNAME,KNAME,PATH", "--json"])
         .arg(path.as_os_str())
-        .output().expect("");
+        .output().unwrap();
 
-    serde_json::from_str(&String::from_utf8(output.stdout).expect("")).expect("error handling requires thinking")
+    serde_json::from_str(&String::from_utf8(output.stdout).unwrap()).unwrap()
 }
 
 fn vdev_list_partitions<'a>(vdev: &'a libzfs::vdev::VDev) -> Vec<&'a PathBuf> {
