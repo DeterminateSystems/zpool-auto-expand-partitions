@@ -3,8 +3,9 @@
 use clap::Parser;
 
 #[derive(Debug, Parser)]
-#[clap(author, version, about, long_about = None)]
+#[clap(about, long_about = None)]
 struct Options {
+    /// Specified ZPool name to lookup in ZFS
     zpool_name: String,
 }
 
