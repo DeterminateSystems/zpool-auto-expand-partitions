@@ -1,5 +1,6 @@
 
 
+use std::path::PathBuf;
 use clap::Parser;
 
 #[derive(Debug, Parser)]
@@ -34,8 +35,19 @@ fn zfs_find_partitions_in_pool(pool_name: &str) {
     let pool = lzfs.pool_by_name(pool_name).expect("Pool retreval failed");
 
     match pool.vdev_tree() {
-        Ok(vdev) => { vdev_find_partitions(&vdev)},
-        Err(e) => eprintln!("Failed: {e}")
+        Ok(vdev) => { 
+            let v = vdev_list_partitions(&vdev); 
+            for i in v.iter() {
+                let output = lsblk_lookup_dev(i);
+                let first_dev = output.blockdevices.first().expect("expected first element");
+                let p_no = get_dev_partition_number(&first_dev.kname);
+                match &first_dev.pkname {
+                    Some(pkname) => println!("{pkname} {p_no}"),
+                    _ => {},
+                }
+            }
+        },
+        Err(e) => { eprintln!("Failed: {e}"); }
     };
 }
 
