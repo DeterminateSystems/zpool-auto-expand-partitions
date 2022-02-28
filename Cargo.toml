@@ -1,5 +1,5 @@
 [package]
-name = "ztest"
+name = "zpool_part_disks"
 version = "0.1.0"
 edition = "2021"
 
