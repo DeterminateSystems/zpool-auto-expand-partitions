@@ -12,6 +12,20 @@ struct Options {
 fn main() {
     let options = Options::parse();
     zfs_find_partitions_in_pool(&options.zpool_name);
+
+}
+
+
+#[derive(Debug, serde::Deserialize)]
+struct LsblkJson {
+    blockdevices: Vec<LsblkInner>
+}
+
+#[derive(Debug, serde::Deserialize)]
+struct LsblkInner {
+    pkname: Option<String>,
+    kname: String,
+    path: String,
 }
 
 fn zfs_find_partitions_in_pool(pool_name: &str) {
@@ -56,6 +70,35 @@ fn vdev_find_partitions<'a>(vdev: &'a libzfs::vdev::VDev, devs: &mut Vec<&'a Pat
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn test_lsblk_json() {
+        let data = r#"
+            {
+                "blockdevices": [
+                {
+                    "pkname": null,
+                    "kname": "vda",
+                    "path": "/dev/vda"
+                },{
+                    "pkname": "vda",
+                    "kname": "vda1",
+                    "path": "/dev/vda1"
+                },{
+                    "pkname": "vda",
+                    "kname": "vda2",
+                    "path": "/dev/vda2"
+                },{
+                    "pkname": "vda",
+                    "kname": "vda3",
+                    "path": "/dev/vda3"
+                }
+                ]
+            }
+        "#;
+
+        let json: LsblkJson = serde_json::from_str(&data).expect("");
+    }
 
     #[test]
     fn test_vdev_tank() {
