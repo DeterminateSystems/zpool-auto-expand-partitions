@@ -12,10 +12,16 @@ struct Options {
     zpool_name: String,
 }
 
-fn main() {
+fn main() -> Result<()> {
     let options = Options::parse();
-    zfs_find_partitions_in_pool(&options.zpool_name);
+    let out = zfs_find_partitions_in_pool(&options.zpool_name)?;
 
+
+    for o in out.iter() {
+        println!("{} {}", o.parent_path.display(), o.partition);
+    }
+
+    Ok(())
 }
 
 
@@ -31,18 +37,22 @@ struct LsblkInner {
     path: String,
 }
 
-fn zfs_find_partitions_in_pool(pool_name: &str) {
+fn zfs_find_partitions_in_pool(pool_name: &str) -> Result<Vec<DriveData>>  {
     let mut lzfs = libzfs::libzfs::Libzfs::new();
     
     let pool = lzfs.pool_by_name(pool_name).expect("Pool retreval failed");
 
+    let mut acc = vec![];
     match pool.vdev_tree() {
-        Ok(vdev) => { 
-            let v = vdev_list_partitions(&vdev); 
-            for i in v.iter() {
-                let output = lsblk_lookup_dev(i);
-                let first_dev = output.blockdevices.first().expect("expected first element");
-                let p_no = get_dev_partition_number(&first_dev.kname);
+        Ok(vdev) => {
+            let disks = vdev_list_partitions(&vdev); 
+            for disk_path in disks.iter() {
+                
+                let output = lsblk_lookup_dev(disk_path)?;
+                let first_dev = output.blockdevices.first().expect("expected first element of blockdevices");
+                
+                let p_no = get_dev_partition_number(&first_dev.kname)?;
+
                 match &first_dev.pkname {
                     Some(pkname) => println!("{pkname} {p_no}"),
                     _ => {},
@@ -51,31 +61,32 @@ fn zfs_find_partitions_in_pool(pool_name: &str) {
         },
         Err(e) => { eprintln!("Failed: {e}"); }
     };
+
+    Ok(acc)
 }
 
 
-fn get_dev_partition_number(dev_name: &str) -> String {
+fn get_dev_partition_number(dev_name: &str) -> Result<String> {
     let sysfs_path: std::path::PathBuf = ["/sys/class/block", dev_name, "partition"].iter().collect();
-    let mut fin = std::fs::File::open(sysfs_path).expect("");
+    let mut fin = std::fs::File::open(sysfs_path)?;
     
     use std::io::Read;
     
     let mut buf_str = String::new();
-    fin.read_to_string(&mut buf_str);
+    let bytes = fin.read_to_string(&mut buf_str)?;
+    // if bytes == 0 { panic!("read zero bytes"); }
 
     let buf_str = buf_str.trim().to_owned();
-    buf_str
-
-    
+    Ok(buf_str)
 }
 
-fn lsblk_lookup_dev(path: &std::path::Path) -> LsblkJson {
+fn lsblk_lookup_dev(path: &std::path::Path) -> Result<LsblkJson> {
     let output = std::process::Command::new("lsblk")
         .args(&[ "-o", "PKNAME,KNAME,PATH", "--json"])
         .arg(path.as_os_str())
-        .output().unwrap();
+        .output()?;
 
-    serde_json::from_str(&String::from_utf8(output.stdout).unwrap()).unwrap()
+    Ok(serde_json::from_str(&String::from_utf8(output.stdout)?)?)
 }
 
 fn vdev_list_partitions<'a>(vdev: &'a libzfs::vdev::VDev) -> Vec<&'a PathBuf> {
