@@ -10,72 +10,134 @@ struct Options {
 
 fn main() {
     let options = Options::parse();
-    let mut lzfs = libzfs::libzfs::Libzfs::new();
+    zfs_find_partitions_in_pool(&options.zpool_name);
+}
 
-    let pool = lzfs.pool_by_name(&options.zpool_name).expect("Pool retreval failed");
-    let cache = blkid::cache::Cache::new().expect("Failed to open blkid cache");
+fn zfs_find_partitions_in_pool(pool_name: &str) {
+    let mut lzfs = libzfs::libzfs::Libzfs::new();
+    
+    let pool = lzfs.pool_by_name(pool_name).expect("Pool retreval failed");
+
     match pool.vdev_tree() {
-        Ok(vdev) => vdev_process(vdev, &cache),
-        Err(e) => println!("Failed: {e}")
+        Ok(vdev) => { vdev_find_partitions(&vdev)},
+        Err(e) => eprintln!("Failed: {e}")
     };
 }
 
-fn vdev_process(vdev: libzfs::vdev::VDev, cache: &blkid::cache::Cache) {
+fn vdev_find_partitions(vdev: &libzfs::vdev::VDev) {
     use libzfs::vdev::VDev;
     match vdev {
-        VDev::Root { children, .. } => {
-            let a = children.iter()
+        VDev::Disk { is_log: None | Some(false), whole_disk: Some(false), state, path, .. } if state == "ONLINE" => {
+            println!("{}", path.to_string_lossy());
+        },
+        
+        VDev::Root { children, .. } 
+        | VDev::Mirror { children, .. } 
+        | VDev::RaidZ { children, .. } => {
+            children.iter()
                 // .chain(spares.iter())
                 // .chain(cache.iter())
-                .for_each(|v| vdev_disks(v, cache));
+                .for_each(vdev_find_partitions);
         },
-        _ => {},
-    };
-}
 
-fn vdev_disks(vdev: &libzfs::vdev::VDev, cache: &blkid::cache::Cache) {
-    use libzfs::vdev::VDev;
-    match vdev {
-        VDev::Disk { path, whole_disk: Some(false), state, .. } if state == "ONLINE" => {
-            // dbg!(path);
-            dbg!(&vdev);
-            dbg!(path.file_name());
-            dbg!({
-                let mut p: std::path::PathBuf = "/sys/class/block".into();
-                p.push(path.file_name().unwrap());
-                p.push("partition");
-                std::fs::File::open(p)
-            });
-            dbg!(cache.get_dev(path.to_str().unwrap(), blkid::dev::GetDevFlags::empty()).unwrap().name());
-
-            use blkid::prober::{Prober, ProbeState};
-            let prober = Prober::new_from_filename(path).unwrap();
-            prober.enable_partitions(true);
-
-            if matches!(prober.do_full_probe(), Ok(ProbeState::Success)) {
-                dbg!(prober.lookup_value("TYPE"));
-                dbg!(prober.lookup_value("PTTYPE"));
-                let ptlist = prober
-                    .part_list();
-                dbg!(ptlist.as_ref().err());
-                dbg!(
-                        ptlist.ok().and_then(|v| v.get_table())
-                        // .and_then(|v| v.get_parent())
-                );
-            }
-
-        },
-        _ => {},
+        _ => { eprintln!(" unimplemented "); },
     }
 }
-
 
 #[cfg(test)]
 mod tests {
     use super::*;
 
     #[test]
-    fn test_name() {
-        vdev_disks()
+    fn test_vdev_tank() {
+        use libzfs::vdev::VDev;
+
+        let vdev = VDev::Root {
+            children: vec![
+                VDev::Disk {
+                    whole_disk: Some(false),
+                    state: "ONLINE".into(),
+                    path: "/dev/vda3".into(),
+                    guid: None,
+                    dev_id: None,
+                    phys_path: None,
+                    is_log: None,
+                }
+            ],
+            spares: vec![],
+            cache: vec![],
+        };
+
+        vdev_find_partitions(&vdev);
+    }
+
+    #[test]
+    fn test_vdevs_tank() {
+        use libzfs::vdev::VDev;
+
+        let vdev = VDev::Root {
+            children: vec![
+                VDev::Disk {
+                    whole_disk: Some(false),
+                    state: "ONLINE".into(),
+                    path: "vda1".into(),
+                    guid: None,
+                    dev_id: None,
+                    phys_path: None,
+                    is_log: None,
+                },
+                VDev::Disk {
+                    whole_disk: Some(false),
+                    state: "ONLINE".into(),
+                    path: "vdb1".into(),
+                    guid: None,
+                    dev_id: None,
+                    phys_path: None,
+                    is_log: None,
+                }
+            ],
+            spares: vec![],
+            cache: vec![],
+        };
+
+        vdev_find_partitions(&vdev);
+    }
+
+    #[test]
+    fn test_vdevs_mirror() {
+        use libzfs::vdev::VDev;
+
+        let vdev = VDev::Root {
+            children: vec![
+                VDev::Mirror {
+                    is_log: None,
+                    children: vec![
+
+                        VDev::Disk {
+                            whole_disk: Some(false),
+                            state: "ONLINE".into(),
+                            path: "vda1".into(),
+                            guid: None,
+                            dev_id: None,
+                            phys_path: None,
+                            is_log: None,
+                        },
+                        VDev::Disk {
+                            whole_disk: Some(false),
+                            state: "ONLINE".into(),
+                            path: "vdb1".into(),
+                            guid: None,
+                            dev_id: None,
+                            phys_path: None,
+                            is_log: None,
+                        }
+                    ],
+                }
+            ],
+            spares: vec![],
+            cache: vec![],
+        };
+
+        vdev_find_partitions(&vdev);
     }
 }
