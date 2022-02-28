@@ -27,6 +27,12 @@ fn zfs_find_partitions_in_pool(pool_name: &str) {
 
 fn vdev_find_partitions(vdev: &libzfs::vdev::VDev) {
 
+fn vdev_list_partitions<'a>(vdev: &'a libzfs::vdev::VDev) -> Vec<&'a PathBuf> {
+    let mut vec = vec![];
+    vdev_find_partitions(vdev, &mut vec);
+    vec
+}
+
 fn vdev_find_partitions<'a>(vdev: &'a libzfs::vdev::VDev, devs: &mut Vec<&'a PathBuf>) {
     use libzfs::vdev::VDev;
     match vdev {
