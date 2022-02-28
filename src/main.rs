@@ -39,7 +39,21 @@ fn zfs_find_partitions_in_pool(pool_name: &str) {
     };
 }
 
-fn vdev_find_partitions(vdev: &libzfs::vdev::VDev) {
+
+fn get_dev_partition_number(dev_name: &str) -> String {
+    let sysfs_path: std::path::PathBuf = ["/sys/class/block", dev_name, "partition"].iter().collect();
+    let mut fin = std::fs::File::open(sysfs_path).expect("");
+    
+    use std::io::Read;
+    
+    let mut buf_str = String::new();
+    fin.read_to_string(&mut buf_str);
+
+    let buf_str = buf_str.trim().to_owned();
+    buf_str
+
+    
+}
 
 fn lsblk_lookup_dev(path: &std::path::Path) -> LsblkJson {
     let output = std::process::Command::new("lsblk")
