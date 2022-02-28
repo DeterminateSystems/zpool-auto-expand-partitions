@@ -9,3 +9,5 @@ edition = "2021"
 blkid = "1.0.0"
 clap = { version = "3.1.2", features = ["derive"] }
 libzfs = "0.6.16"
+serde = { version = "1.0.136", features = ["derive"] }
+serde_json = "1.0.79"
