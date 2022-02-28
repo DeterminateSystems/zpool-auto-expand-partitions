@@ -17,12 +17,12 @@ fn main() {
 }
 
 
-#[derive(Debug, serde::Deserialize)]
+#[derive(Debug, PartialEq, serde::Deserialize)]
 struct LsblkJson {
     blockdevices: Vec<LsblkInner>
 }
 
-#[derive(Debug, serde::Deserialize)]
+#[derive(Debug, PartialEq, serde::Deserialize)]
 struct LsblkInner {
     pkname: Option<String>,
     kname: String,
@@ -107,7 +107,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_lsblk_json() {
+    fn test_lsblk_json_output_deserialize() {
         let data = r#"
             {
                 "blockdevices": [
@@ -132,11 +132,40 @@ mod tests {
             }
         "#;
 
-        let json: LsblkJson = serde_json::from_str(&data).expect("");
+        let json: LsblkJson = serde_json::from_str(&data).unwrap();
+
+        let cmp = LsblkJson {
+            blockdevices: vec![
+                LsblkInner {
+                    pkname: None,
+                    kname: "vda".into(),
+                    path: "/dev/vda".into(),
+
+                },
+                LsblkInner {
+                    pkname: Some("vda".into()),
+                    kname: "vda1".into(),
+                    path: "/dev/vda1".into(),
+                },
+                LsblkInner {
+                    pkname: Some("vda".into()),
+                    kname: "vda2".into(),
+                    path: "/dev/vda2".into(),
+                },
+                LsblkInner {
+                    pkname: Some("vda".into()),
+                    kname: "vda3".into(),
+                    path: "/dev/vda3".into(),
+                }
+            ]
+        };
+
+        assert_eq!(cmp, json);
+
     }
 
     #[test]
-    fn test_vdev_tank() {
+    fn test_vdev_tank_example() {
         use libzfs::vdev::VDev;
 
         let vdev = VDev::Root {
@@ -155,11 +184,12 @@ mod tests {
             cache: vec![],
         };
         
-        vdev_list_partitions(&vdev);
+        let disks = vdev_list_partitions(&vdev);
+        assert_eq!(disks, &[ &std::path::PathBuf::from("/dev/vda3")])
     }
 
     #[test]
-    fn test_vdevs_tank() {
+    fn test_multiple_disks() {
         use libzfs::vdev::VDev;
 
         let vdev = VDev::Root {
@@ -187,11 +217,13 @@ mod tests {
             cache: vec![],
         };
 
-        vdev_list_partitions(&vdev);
+        use std::path::PathBuf;
+        assert_eq!(vdev_list_partitions(&vdev), &[ &PathBuf::from("vda1"), &PathBuf::from("vdb1") ]);
+        
     }
 
     #[test]
-    fn test_vdevs_mirror() {
+    fn test_multiple_disks_in_mirror() {
         use libzfs::vdev::VDev;
 
         let vdev = VDev::Root {
@@ -225,6 +257,7 @@ mod tests {
             cache: vec![],
         };
 
-        vdev_list_partitions(&vdev);
+        use std::path::PathBuf;
+        assert_eq!(vdev_list_partitions(&vdev), &[ &PathBuf::from("vda1"), &PathBuf::from("vdb1") ]);
     }
 }
