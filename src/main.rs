@@ -26,10 +26,12 @@ fn zfs_find_partitions_in_pool(pool_name: &str) {
 }
 
 fn vdev_find_partitions(vdev: &libzfs::vdev::VDev) {
+
+fn vdev_find_partitions<'a>(vdev: &'a libzfs::vdev::VDev, devs: &mut Vec<&'a PathBuf>) {
     use libzfs::vdev::VDev;
     match vdev {
         VDev::Disk { is_log: None | Some(false), whole_disk: Some(false), state, path, .. } if state == "ONLINE" => {
-            println!("{}", path.to_string_lossy());
+            devs.push(path);
         },
         
         VDev::Root { children, .. } 
@@ -38,7 +40,7 @@ fn vdev_find_partitions(vdev: &libzfs::vdev::VDev) {
             children.iter()
                 // .chain(spares.iter())
                 // .chain(cache.iter())
-                .for_each(vdev_find_partitions);
+                .for_each(|i| vdev_find_partitions(i, devs));
         },
 
         _ => { eprintln!(" unimplemented "); },
