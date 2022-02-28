@@ -14,11 +14,11 @@ struct Options {
 
 fn main() -> Result<()> {
     let options = Options::parse();
-    let out = zfs_find_partitions_in_pool(&options.zpool_name)?;
 
+    let disk_parts = zfs_find_partitions_in_pool(&options.zpool_name)?;
 
-    for o in out.iter() {
-        println!("{} {}", o.parent_path.display(), o.partition);
+    for disk in &disk_parts {
+        println!("{} {}", disk.parent_path.display(), disk.partition);
     }
 
     Ok(())
