@@ -121,14 +121,12 @@ fn vdev_find_partitions<'a>(vdev: &'a libzfs::vdev::VDev, devs: &mut Vec<&'a Pat
         
         VDev::Root { children, .. } 
         | VDev::Mirror { children, .. } 
-        | VDev::RaidZ { children, .. } => {
-            children.iter()
-                // .chain(spares.iter())
-                // .chain(cache.iter())
-                .for_each(|i| vdev_find_partitions(i, devs));
-        },
+        | VDev::RaidZ { children, .. } =>
+            children.iter().for_each(|i| vdev_find_partitions(i, devs)),
 
-        _ => { eprintln!(" unimplemented "); },
+        VDev::Disk { .. } => {},
+
+        _ => unimplemented!(),
     }
 }
 
@@ -228,6 +226,15 @@ mod tests {
                     whole_disk: Some(false),
                     state: "ONLINE".into(),
                     path: "vda1".into(),
+                    guid: None,
+                    dev_id: None,
+                    phys_path: None,
+                    is_log: None,
+                },
+                VDev::Disk {
+                    whole_disk: Some(false),
+                    state: "OFFLINE".into(),
+                    path: "vdc1".into(),
                     guid: None,
                     dev_id: None,
                     phys_path: None,
