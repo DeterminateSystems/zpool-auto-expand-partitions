@@ -1,4 +1,9 @@
-import <nixpkgs/nixos/tests/make-test-python.nix> ({ pkgs, ... }:
+let
+  compat = import ./default.nix;
+  zpool_tool = compat.defaultPackage.${builtins.currentSystem};
+  nixpkgs = compat.inputs.nixpkgs;
+in
+import "${nixpkgs}/nixos/tests/make-test-python.nix" ({ pkgs, ... }:
   {
     name = "multi-disk-zfs";
     nodes = {
