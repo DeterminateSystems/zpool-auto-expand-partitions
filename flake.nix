@@ -57,15 +57,13 @@
 
               # https://hoverbear.org/blog/rust-bindgen-in-nix/
               LIBCLANG_PATH="${pkgs.llvmPackages.libclang.lib}/lib";
-              C_INCLUDE_PATH = lib.makeSearchPathOutput "dev" "include" [ pkgs.util-linux pkgs.llvmPackages.clang ];
+              C_INCLUDE_PATH = lib.makeSearchPathOutput "dev" "include" [ 
+                pkgs.util-linux
+              ];
               BINDGEN_EXTRA_CLANG_ARGS = lib.concatStringsSep " " [
                 (builtins.readFile "${pkgs.stdenv.cc}/nix-support/libc-crt1-cflags")
                 (builtins.readFile "${pkgs.stdenv.cc}/nix-support/libc-cflags")
                 (builtins.readFile "${pkgs.stdenv.cc}/nix-support/cc-cflags")
-                (builtins.readFile "${pkgs.clang}/nix-support/libc-crt1-cflags")
-                (builtins.readFile "${pkgs.clang}/nix-support/libc-cflags")
-                (builtins.readFile "${pkgs.clang}/nix-support/cc-cflags")
-                (lib.optionalString pkgs.stdenv.cc.isClang "-idirafter ${pkgs.stdenv.cc.cc}/lib/clang/${lib.getVersion pkgs.stdenv.cc.cc}/include")
                 (lib.optionalString pkgs.stdenv.cc.isGNU ( lib.concatStringsSep " " [
                   "-isystem ${pkgs.stdenv.cc.cc}/include/c++/${lib.getVersion pkgs.stdenv.cc.cc}"
                   "-isystem ${pkgs.stdenv.cc.cc}/include/c++/${lib.getVersion pkgs.stdenv.cc.cc}/${pkgs.stdenv.hostPlatform.config}"
