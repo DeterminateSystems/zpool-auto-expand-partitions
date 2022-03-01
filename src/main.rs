@@ -1,10 +1,10 @@
-
-use std::path::PathBuf;
 use clap::Parser;
+use std::path::PathBuf;
 
-pub type Result<T, E = Box<dyn std::error::Error + Send + Sync + 'static>> = core::result::Result<T, E>;
+pub type Result<T, E = Box<dyn std::error::Error + Send + Sync + 'static>> =
+    core::result::Result<T, E>;
 
-/// 
+///
 #[derive(Debug, Parser)]
 #[clap(about, long_about = None)]
 struct Options {
@@ -24,10 +24,9 @@ fn main() -> Result<()> {
     Ok(())
 }
 
-
 #[derive(Debug, PartialEq, serde::Deserialize)]
 struct LsblkJson {
-    blockdevices: Vec<LsblkInner>
+    blockdevices: Vec<LsblkInner>,
 }
 
 #[derive(Debug, PartialEq, serde::Deserialize)]
@@ -46,49 +45,51 @@ struct DriveData {
     partition: String,
 }
 
-fn zfs_find_partitions_in_pool(pool_name: &str) -> Result<Vec<DriveData>>  {
+fn zfs_find_partitions_in_pool(pool_name: &str) -> Result<Vec<DriveData>> {
     let mut lzfs = libzfs::libzfs::Libzfs::new();
-    
-    let pool = lzfs.pool_by_name(pool_name).expect("Pool retreval failed");
+
+    let pool = lzfs.pool_by_name(pool_name).expect("Pool retrieval failed");
 
     let mut acc = vec![];
     match pool.vdev_tree() {
         Ok(vdev) => {
-            let disks = vdev_list_partitions(&vdev); 
+            let disks = vdev_list_partitions(&vdev);
             for disk_path in disks.iter() {
-                
                 let output = lsblk_lookup_dev(disk_path)?;
-                let first_dev = output.blockdevices.first().expect("expected first element of blockdevices");
-                
+                let first_dev = output
+                    .blockdevices
+                    .first()
+                    .expect("expected first element of blockdevices");
+
                 let p_no = get_dev_partition_number(&first_dev.kname)?;
 
                 match &first_dev.pkname {
-                    Some(pkname) => {
-                        acc.push(DriveData{
-                            partition: p_no,
-                            parent: pkname.to_owned(),
-                            parent_path: { ["/dev", pkname ].iter().collect() },
-                            path: disk_path.to_path_buf(),
-                            name: first_dev.kname.to_owned(),
-                        })
-                    },
-                    _ => {},
+                    Some(pkname) => acc.push(DriveData {
+                        partition: p_no,
+                        parent: pkname.to_owned(),
+                        parent_path: { ["/dev", pkname].iter().collect() },
+                        path: disk_path.to_path_buf(),
+                        name: first_dev.kname.to_owned(),
+                    }),
+                    _ => {}
                 }
             }
-        },
-        Err(e) => { eprintln!("Failed: {e}"); }
+        }
+        Err(e) => {
+            eprintln!("Failed: {e}");
+        }
     };
 
     Ok(acc)
 }
 
-
 fn get_dev_partition_number(dev_name: &str) -> Result<String> {
-    let sysfs_path: std::path::PathBuf = ["/sys/class/block", dev_name, "partition"].iter().collect();
+    let sysfs_path: std::path::PathBuf =
+        ["/sys/class/block", dev_name, "partition"].iter().collect();
     let mut fin = std::fs::File::open(sysfs_path)?;
-    
+
     use std::io::Read;
-    
+
     let mut buf_str = String::new();
     let bytes = fin.read_to_string(&mut buf_str)?;
     // if bytes == 0 { panic!("read zero bytes"); }
@@ -99,7 +100,7 @@ fn get_dev_partition_number(dev_name: &str) -> Result<String> {
 
 fn lsblk_lookup_dev(path: &std::path::Path) -> Result<LsblkJson> {
     let output = std::process::Command::new("lsblk")
-        .args(&[ "-o", "PKNAME,KNAME,PATH", "--json"])
+        .args(&["-o", "PKNAME,KNAME,PATH", "--json"])
         .arg(path.as_os_str())
         .output()?;
 
@@ -115,16 +116,23 @@ fn vdev_list_partitions<'a>(vdev: &'a libzfs::vdev::VDev) -> Vec<&'a PathBuf> {
 fn vdev_find_partitions<'a>(vdev: &'a libzfs::vdev::VDev, devs: &mut Vec<&'a PathBuf>) {
     use libzfs::vdev::VDev;
     match vdev {
-        VDev::Disk { is_log: None | Some(false), whole_disk: Some(false), state, path, .. } if state == "ONLINE" => {
+        VDev::Disk {
+            is_log: None | Some(false),
+            whole_disk: Some(false),
+            state,
+            path,
+            ..
+        } if state == "ONLINE" => {
             devs.push(path);
-        },
-        
-        VDev::Root { children, .. } 
-        | VDev::Mirror { children, .. } 
-        | VDev::RaidZ { children, .. } =>
-            children.iter().for_each(|i| vdev_find_partitions(i, devs)),
+        }
 
-        VDev::Disk { .. } => {},
+        VDev::Root { children, .. }
+        | VDev::Mirror { children, .. }
+        | VDev::RaidZ { children, .. } => {
+            children.iter().for_each(|i| vdev_find_partitions(i, devs))
+        }
+
+        VDev::Disk { .. } => {}
 
         _ => unimplemented!(),
     }
@@ -168,7 +176,6 @@ mod tests {
                     pkname: None,
                     kname: "vda".into(),
                     path: "/dev/vda".into(),
-
                 },
                 LsblkInner {
                     pkname: Some("vda".into()),
@@ -184,12 +191,11 @@ mod tests {
                     pkname: Some("vda".into()),
                     kname: "vda3".into(),
                     path: "/dev/vda3".into(),
-                }
-            ]
+                },
+            ],
         };
 
         assert_eq!(cmp, json);
-
     }
 
     #[test]
@@ -197,23 +203,21 @@ mod tests {
         use libzfs::vdev::VDev;
 
         let vdev = VDev::Root {
-            children: vec![
-                VDev::Disk {
-                    whole_disk: Some(false),
-                    state: "ONLINE".into(),
-                    path: "/dev/vda3".into(),
-                    guid: None,
-                    dev_id: None,
-                    phys_path: None,
-                    is_log: None,
-                }
-            ],
+            children: vec![VDev::Disk {
+                whole_disk: Some(false),
+                state: "ONLINE".into(),
+                path: "/dev/vda3".into(),
+                guid: None,
+                dev_id: None,
+                phys_path: None,
+                is_log: None,
+            }],
             spares: vec![],
             cache: vec![],
         };
-        
+
         let disks = vdev_list_partitions(&vdev);
-        assert_eq!(disks, &[ &std::path::PathBuf::from("/dev/vda3")])
+        assert_eq!(disks, &[&std::path::PathBuf::from("/dev/vda3")])
     }
 
     #[test]
@@ -248,15 +252,17 @@ mod tests {
                     dev_id: None,
                     phys_path: None,
                     is_log: None,
-                }
+                },
             ],
             spares: vec![],
             cache: vec![],
         };
 
         use std::path::PathBuf;
-        assert_eq!(vdev_list_partitions(&vdev), &[ &PathBuf::from("vda1"), &PathBuf::from("vdb1") ]);
-        
+        assert_eq!(
+            vdev_list_partitions(&vdev),
+            &[&PathBuf::from("vda1"), &PathBuf::from("vdb1")]
+        );
     }
 
     #[test]
@@ -264,37 +270,37 @@ mod tests {
         use libzfs::vdev::VDev;
 
         let vdev = VDev::Root {
-            children: vec![
-                VDev::Mirror {
-                    is_log: None,
-                    children: vec![
-
-                        VDev::Disk {
-                            whole_disk: Some(false),
-                            state: "ONLINE".into(),
-                            path: "vda1".into(),
-                            guid: None,
-                            dev_id: None,
-                            phys_path: None,
-                            is_log: None,
-                        },
-                        VDev::Disk {
-                            whole_disk: Some(false),
-                            state: "ONLINE".into(),
-                            path: "vdb1".into(),
-                            guid: None,
-                            dev_id: None,
-                            phys_path: None,
-                            is_log: None,
-                        }
-                    ],
-                }
-            ],
+            children: vec![VDev::Mirror {
+                is_log: None,
+                children: vec![
+                    VDev::Disk {
+                        whole_disk: Some(false),
+                        state: "ONLINE".into(),
+                        path: "vda1".into(),
+                        guid: None,
+                        dev_id: None,
+                        phys_path: None,
+                        is_log: None,
+                    },
+                    VDev::Disk {
+                        whole_disk: Some(false),
+                        state: "ONLINE".into(),
+                        path: "vdb1".into(),
+                        guid: None,
+                        dev_id: None,
+                        phys_path: None,
+                        is_log: None,
+                    },
+                ],
+            }],
             spares: vec![],
             cache: vec![],
         };
 
         use std::path::PathBuf;
-        assert_eq!(vdev_list_partitions(&vdev), &[ &PathBuf::from("vda1"), &PathBuf::from("vdb1") ]);
+        assert_eq!(
+            vdev_list_partitions(&vdev),
+            &[&PathBuf::from("vda1"), &PathBuf::from("vdb1")]
+        );
     }
 }
