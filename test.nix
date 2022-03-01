@@ -9,7 +9,7 @@ import "${nixpkgs}/nixos/tests/make-test-python.nix" ({ pkgs, ... }:
     nodes = {
       machine =
         { pkgs, ... }: {
-          environment.systemPackages = [ pkgs.parted pkgs.cloud-utils ];
+          environment.systemPackages = [ pkgs.parted pkgs.cloud-utils zpool_tool ];
           boot.supportedFilesystems = [ "zfs" ];
           networking.hostId = "00000000";
 
@@ -33,6 +33,12 @@ import "${nixpkgs}/nixos/tests/make-test-python.nix" ({ pkgs, ... }:
         print(machine.succeed('parted --script /dev/vdc -- mkpart primary 1M 70M'))
 
         print(machine.succeed('zpool create tank mirror /dev/vdb1 /dev/vdc1 mirror /dev/vdd /dev/vde mirror /dev/vdf /dev/vdg'))
+        print(machine.succeed('zpool list -v'))
+
+        zdisks = machine.succeed('zpool_part_disks tank | xargs -n2 growpart')
+        print(zdisks)
+
+        print(machine.succeed('zpool online -e tank /dev/vdb1 /dev/vdc1'))
         print(machine.succeed('zpool list -v'))
       '';
   })
