@@ -4,7 +4,6 @@ use std::path::PathBuf;
 pub type Result<T, E = Box<dyn std::error::Error + Send + Sync + 'static>> =
     core::result::Result<T, E>;
 
-///
 #[derive(Debug, Parser)]
 #[clap(about, long_about = None)]
 struct Options {
@@ -86,7 +85,7 @@ fn zfs_find_partitions_in_pool(pool_name: &str) -> Result<Vec<DriveData>> {
 }
 
 fn get_dev_partition_number(dev_name: &str) -> Result<String> {
-    let sysfs_path: std::path::PathBuf =
+    let sysfs_path: PathBuf =
         ["/sys/class/block", dev_name, "partition"].iter().collect();
     let mut fin = std::fs::File::open(sysfs_path)?;
 
@@ -94,7 +93,6 @@ fn get_dev_partition_number(dev_name: &str) -> Result<String> {
 
     let mut buf_str = String::new();
     let bytes = fin.read_to_string(&mut buf_str)?;
-    // if bytes == 0 { panic!("read zero bytes"); }
 
     let buf_str = buf_str.trim().to_owned();
     Ok(buf_str)
