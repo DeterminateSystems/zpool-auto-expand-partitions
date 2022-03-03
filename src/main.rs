@@ -85,8 +85,7 @@ fn zfs_find_partitions_in_pool(pool_name: &str) -> Result<Vec<DriveData>> {
 }
 
 fn get_dev_partition_number(dev_name: &str) -> Result<String> {
-    let sysfs_path: PathBuf =
-        ["/sys/class/block", dev_name, "partition"].iter().collect();
+    let sysfs_path: PathBuf = ["/sys/class/block", dev_name, "partition"].iter().collect();
     let mut fin = std::fs::File::open(sysfs_path)?;
 
     use std::io::Read;
