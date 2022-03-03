@@ -48,7 +48,9 @@ struct DriveData {
 fn zfs_find_partitions_in_pool(pool_name: &str) -> Result<Vec<DriveData>> {
     let mut lzfs = libzfs::libzfs::Libzfs::new();
 
-    let pool = lzfs.pool_by_name(pool_name).expect("Pool retrieval failed");
+    let pool = lzfs
+        .pool_by_name(pool_name)
+        .ok_or("Pool retrieval failed")?;
 
     let mut acc = vec![];
     match pool.vdev_tree() {
@@ -59,7 +61,7 @@ fn zfs_find_partitions_in_pool(pool_name: &str) -> Result<Vec<DriveData>> {
                 let first_dev = output
                     .blockdevices
                     .first()
-                    .expect("expected first element of blockdevices");
+                    .ok_or("expected first element of blockdevices")?;
 
                 let p_no = get_dev_partition_number(&first_dev.kname)?;
 
