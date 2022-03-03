@@ -84,14 +84,5 @@
           });
 
       defaultPackage = forAllSystems ({ system, ... }: self.packages.${system}.zpool_part_disks);
-
-      nixosModules.module = {
-        imports = [ ./nixos-module.nix ];
-        nixpkgs.overlays = [
-          (final: prev: {
-            bootspec = self.defaultPackage."${final.system}";
-          })
-        ];
-      };
     };
 }
