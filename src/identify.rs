@@ -59,7 +59,7 @@ fn get_dev_partition_number(dev_name: &str) -> Result<String> {
     use std::io::Read;
 
     let mut buf_str = String::new();
-    let bytes = fin.read_to_string(&mut buf_str)?;
+    fin.read_to_string(&mut buf_str)?;
 
     let buf_str = buf_str.trim().to_owned();
     Ok(buf_str)
