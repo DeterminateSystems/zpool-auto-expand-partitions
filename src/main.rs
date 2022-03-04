@@ -11,6 +11,22 @@ use crate::errors::Result;
 struct Options {
     /// Specified ZPool name to lookup in ZFS
     zpool_name: String,
+
+    /// Automatically grow all candidate partitions (true|false)
+    #[clap(long, parse(try_from_str = true_or_false), default_value_t)]
+    automatically_grow: bool,
+
+    /// Don't make any changes (true|false)
+    #[clap(long, parse(try_from_str = true_or_false), default_value_t)]
+    dry_run: bool,
+}
+
+fn true_or_false(s: &str) -> Result<bool, &'static str> {
+    match s {
+        "true" => Ok(true),
+        "false" => Ok(false),
+        _ => Err("expected `true` or `false`"),
+    }
 }
 
 fn main() -> Result<()> {
