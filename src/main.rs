@@ -2,6 +2,7 @@ use clap::Parser;
 use std::path::PathBuf;
 
 mod errors;
+mod lsblk;
 
 use crate::errors::Result;
 
@@ -22,18 +23,6 @@ fn main() -> Result<()> {
     }
 
     Ok(())
-}
-
-#[derive(Debug, PartialEq, serde::Deserialize)]
-struct LsblkJson {
-    blockdevices: Vec<LsblkInner>,
-}
-
-#[derive(Debug, PartialEq, serde::Deserialize)]
-struct LsblkInner {
-    pkname: Option<String>,
-    kname: String,
-    path: String,
 }
 
 #[derive(Debug)]
@@ -57,7 +46,7 @@ fn zfs_find_partitions_in_pool(pool_name: &str) -> Result<Vec<DriveData>> {
         Ok(vdev) => {
             let disks = vdev_list_partitions(&vdev);
             for disk_path in disks.iter() {
-                let output = lsblk_lookup_dev(disk_path)?;
+                let output = lsblk::lsblk_lookup_dev(disk_path)?;
                 let first_dev = output
                     .blockdevices
                     .first()
@@ -98,15 +87,6 @@ fn get_dev_partition_number(dev_name: &str) -> Result<String> {
     Ok(buf_str)
 }
 
-fn lsblk_lookup_dev(path: &std::path::Path) -> Result<LsblkJson> {
-    let output = std::process::Command::new("lsblk")
-        .args(&["-o", "PKNAME,KNAME,PATH", "--json"])
-        .arg(path.as_os_str())
-        .output()?;
-
-    Ok(serde_json::from_str(&String::from_utf8(output.stdout)?)?)
-}
-
 fn vdev_list_partitions<'a>(vdev: &'a libzfs::vdev::VDev) -> Vec<&'a PathBuf> {
     let mut vec = vec![];
     vdev_find_partitions(vdev, &mut vec);
@@ -141,62 +121,6 @@ fn vdev_find_partitions<'a>(vdev: &'a libzfs::vdev::VDev, devs: &mut Vec<&'a Pat
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    #[test]
-    fn test_lsblk_json_output_deserialize() {
-        let data = r#"
-            {
-                "blockdevices": [
-                {
-                    "pkname": null,
-                    "kname": "vda",
-                    "path": "/dev/vda"
-                },{
-                    "pkname": "vda",
-                    "kname": "vda1",
-                    "path": "/dev/vda1"
-                },{
-                    "pkname": "vda",
-                    "kname": "vda2",
-                    "path": "/dev/vda2"
-                },{
-                    "pkname": "vda",
-                    "kname": "vda3",
-                    "path": "/dev/vda3"
-                }
-                ]
-            }
-        "#;
-
-        let json: LsblkJson = serde_json::from_str(&data).unwrap();
-
-        let cmp = LsblkJson {
-            blockdevices: vec![
-                LsblkInner {
-                    pkname: None,
-                    kname: "vda".into(),
-                    path: "/dev/vda".into(),
-                },
-                LsblkInner {
-                    pkname: Some("vda".into()),
-                    kname: "vda1".into(),
-                    path: "/dev/vda1".into(),
-                },
-                LsblkInner {
-                    pkname: Some("vda".into()),
-                    kname: "vda2".into(),
-                    path: "/dev/vda2".into(),
-                },
-                LsblkInner {
-                    pkname: Some("vda".into()),
-                    kname: "vda3".into(),
-                    path: "/dev/vda3".into(),
-                },
-            ],
-        };
-
-        assert_eq!(cmp, json);
-    }
 
     #[test]
     fn test_vdev_tank_example() {
