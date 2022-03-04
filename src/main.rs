@@ -1,6 +1,7 @@
 use clap::Parser;
 
 mod errors;
+mod grow;
 mod identify;
 mod lsblk;
 
@@ -37,6 +38,14 @@ fn main() -> Result<()> {
 
     for disk in &disk_parts {
         println!("{} {}", disk.parent_path.display(), disk.partition);
+
+        if options.automatically_grow {
+            println!("Growing the partition and expanding the vdev...");
+            grow::grow(&options.zpool_name, disk, options.dry_run).unwrap();
+            println!("...ok.");
+
+            println!("");
+        }
     }
 
     Ok(())
