@@ -13,21 +13,13 @@ struct Options {
     /// Specified ZPool name to lookup in ZFS
     zpool_name: String,
 
-    /// Automatically grow all candidate partitions (true|false)
-    #[clap(long, parse(try_from_str = true_or_false), default_value_t)]
+    /// Automatically grow all candidate partitions
+    #[clap(long)]
     automatically_grow: bool,
 
-    /// Don't make any changes (true|false)
-    #[clap(long, parse(try_from_str = true_or_false), default_value_t)]
+    /// Don't make any changes
+    #[clap(long)]
     dry_run: bool,
-}
-
-fn true_or_false(s: &str) -> Result<bool, &'static str> {
-    match s {
-        "true" => Ok(true),
-        "false" => Ok(false),
-        _ => Err("expected `true` or `false`"),
-    }
 }
 
 fn main() -> Result<()> {
