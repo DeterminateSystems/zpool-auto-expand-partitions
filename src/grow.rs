@@ -1,4 +1,6 @@
 use crate::identify::DriveData;
+
+use std::fmt;
 use std::process::{Command, ExitStatus, Output};
 
 pub fn grow(pool_name: &str, disk: &DriveData, dry_run: bool) -> Result<(), GrowError> {
@@ -47,3 +49,11 @@ pub enum GrowError {
     ZpoolSpawnError(std::io::Error),
     ZpoolOnlineFailed(ExitStatus),
 }
+
+impl fmt::Display for GrowError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "GrowError")
+    }
+}
+
+impl std::error::Error for GrowError {}

@@ -41,7 +41,7 @@ fn main() -> Result<()> {
 
         if options.automatically_grow {
             println!("Growing the partition and expanding the vdev...");
-            grow::grow(&options.zpool_name, disk, options.dry_run).unwrap();
+            grow::grow(&options.zpool_name, disk, options.dry_run)?;
             println!("...ok.\n");
         }
     }
