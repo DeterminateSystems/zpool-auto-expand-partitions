@@ -74,6 +74,7 @@
 
                 nativeBuildInputs = [
                   pkgs.pkg-config
+                  pkgs.cloud-utils
                 ];
 
                 buildInputs = [
