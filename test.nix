@@ -34,11 +34,19 @@ import "${nixpkgs}/nixos/tests/make-test-python.nix" ({ pkgs, ... }:
 
         print(machine.succeed('zpool create tank mirror /dev/vdb1 /dev/vdc1 mirror /dev/vdd /dev/vde mirror /dev/vdf /dev/vdg'))
         print(machine.succeed('zpool list -v'))
+        print(machine.succeed('mount'))
+        start_size = int(machine.succeed('df -k --output=size /tank | tail -n1').strip())
 
-        zdisks = machine.succeed('zpool_part_disks tank | xargs -n2 growpart')
-        print(zdisks)
+        print(machine.succeed('zpool_part_disks --automatically-grow true tank'))
 
-        print(machine.succeed('zpool online -e tank /dev/vdb1 /dev/vdc1'))
         print(machine.succeed('zpool list -v'))
+        new_size = int(machine.succeed('df -k --output=size /tank | tail -n1').strip())
+
+        if (new_size - start_size) > 20000000:
+          print("Disk grew appropriately.")
+        else:
+          print(f"Disk went from {start_size} to {new_size}, which doesn't seem right.")
+          exit(1)
+
       '';
   })
