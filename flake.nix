@@ -72,14 +72,19 @@
 
                 cargoLock.lockFile = ./Cargo.lock;
 
+                preBuild = ''
+                  substituteInPlace src/grow.rs \
+                    --replace '"growpart"' '"${pkgs.cloud-utils}/bin/growpart"'
+                  substituteInPlace src/lsblk.rs \
+                    --replace '"lsblk"' '"${pkgs.util-linux}/bin/lsblk"'
+                '';
+
                 nativeBuildInputs = [
                   pkgs.pkg-config
-                  pkgs.cloud-utils
                 ];
 
                 buildInputs = [
                   pkgs.zfs.dev
-                  pkgs.util-linux.dev
                 ];
               } // bindgenEnvs pkgs);
           });
