@@ -7,7 +7,8 @@ zpool to fill the available space.
 
 ```
 $ zpool_part_disks --help
-$ zpool_part_disks zpool --dry-run
+$ zpool_part_disks --automatically-grow zpool
+$ zpool_part_disks --automatically-grow --dry-run zpool
 ```
 
 # License
