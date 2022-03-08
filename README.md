@@ -1,4 +1,4 @@
-# `zpool_part_disks`
+# `zpool-auto-expand-partitions`
 
 `zpool_part_disks` is a tool that aims to expand all partitions in a specified
 zpool to fill the available space.
