@@ -1,5 +1,5 @@
 {
-  description = "zpool_part_disks";
+  description = "zpool-auto-expand-partitions";
 
   inputs.nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
 
@@ -45,10 +45,10 @@
     {
       devShell = forAllSystems ({ system, pkgs, ... }:
         pkgs.mkShell ({
-          name = "zpool_part_disks";
+          name = "zpool-auto-expand-partitions";
 
           inputsFrom = [
-            self.packages.${system}.zpool_part_disks
+            self.packages.${system}.zpool-auto-expand-partitions
           ];
 
           buildInputs = with pkgs; [
@@ -63,7 +63,7 @@
       packages = forAllSystems
         ({ system, pkgs, ... }:
           {
-            zpool_part_disks = let cargo = builtins.fromTOML (builtins.readFile ./Cargo.toml); in
+            zpool-auto-expand-partitions = let cargo = builtins.fromTOML (builtins.readFile ./Cargo.toml); in
               pkgs.rustPlatform.buildRustPackage (rec {
                 pname = cargo.package.name;
                 version = cargo.package.version;
@@ -89,6 +89,6 @@
               } // bindgenEnvs pkgs);
           });
 
-      defaultPackage = forAllSystems ({ system, ... }: self.packages.${system}.zpool_part_disks);
+      defaultPackage = forAllSystems ({ system, ... }: self.packages.${system}.zpool-auto-expand-partitions);
     };
 }

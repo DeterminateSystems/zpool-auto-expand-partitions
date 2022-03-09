@@ -37,7 +37,7 @@ import "${nixpkgs}/nixos/tests/make-test-python.nix" ({ pkgs, ... }:
         print(machine.succeed('mount'))
         start_size = int(machine.succeed('df -k --output=size /tank | tail -n1').strip())
 
-        print(machine.succeed('zpool_part_disks --automatically-grow tank'))
+        print(machine.succeed('zpool-auto-expand-partitions --automatically-grow tank'))
 
         print(machine.succeed('zpool list -v'))
         new_size = int(machine.succeed('df -k --output=size /tank | tail -n1').strip())

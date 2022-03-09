@@ -1,14 +1,14 @@
 # `zpool-auto-expand-partitions`
 
-`zpool_part_disks` is a tool that aims to expand all partitions in a specified
+`zpool-auto-expand-partitions` is a tool that aims to expand all partitions in a specified
 zpool to fill the available space.
 
 ## Usage
 
 ```
-$ zpool_part_disks --help
-$ zpool_part_disks --automatically-grow zpool
-$ zpool_part_disks --automatically-grow --dry-run zpool
+$ zpool-auto-expand-partitions --help
+$ zpool-auto-expand-partitions --automatically-grow zpool
+$ zpool-auto-expand-partitions --automatically-grow --dry-run zpool
 ```
 
 # License
