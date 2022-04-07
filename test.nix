@@ -9,7 +9,7 @@ import "${nixpkgs}/nixos/tests/make-test-python.nix" ({ pkgs, ... }:
     nodes = {
       machine =
         { pkgs, ... }: {
-          environment.systemPackages = [ pkgs.parted pkgs.cloud-utils zpool_tool ];
+          environment.systemPackages = [ pkgs.parted zpool_tool ];
           boot.supportedFilesystems = [ "zfs" ];
           networking.hostId = "00000000";
 
