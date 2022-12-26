@@ -92,13 +92,14 @@ checksum = "bef38d45163c2f1dde094a7dfd33ccf595c92905c8f8f4fdc18d06fb1037718a"
 
 [[package]]
 name = "blkid"
-version = "1.0.0"
+version = "1.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7f9e27b6aa38371b07aa97ee344a8b25554ecd3bcaae3da79abe3a7f0c06cdf2"
+checksum = "4f68440dfd06d6a97a56f8e67729316f33c7e52c31f59f16f6e9641777702bb7"
 dependencies = [
  "bitflags",
  "blkid-sys",
  "libc",
+ "pkg-config",
  "strum",
  "strum_macros",
  "thiserror",
