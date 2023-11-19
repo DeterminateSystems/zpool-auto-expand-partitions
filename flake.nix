@@ -55,6 +55,9 @@
                 src = self;
 
                 cargoLock.lockFile = ./Cargo.lock;
+                cargoLock.outputHashes = {
+                  "libzfs-0.6.16" = "sha256-kQunP/xW1Zb1q+TcgAkmZkt1yDnJo9CwF5qldikVN94=";
+                };
 
                 preBuild = ''
                   substituteInPlace src/grow.rs \
