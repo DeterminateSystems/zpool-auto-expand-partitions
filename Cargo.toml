@@ -1,13 +1,16 @@
 [package]
 name = "zpool_part_disks"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-blkid = "1.0.0"
+blkid = "1.0.1"
 clap = { version = "3.1.2", features = ["derive"] }
 libzfs = "0.6.16"
 serde = { version = "1.0.136", features = ["derive"] }
 serde_json = "1.0.79"
+
+[patch.crates-io]
+libzfs = { git = "https://github.com/DeterminateSystems/rust-libzfs", branch = "fix-build-zpool-auto-expand-partitions" }
